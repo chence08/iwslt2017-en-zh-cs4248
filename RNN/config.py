@@ -2,7 +2,6 @@ import torch
 
 d_model = 256
 d_hidden = 512
-n_layers = 3
 dropout = 0.1
 padding_idx = 0
 bos_idx = 2

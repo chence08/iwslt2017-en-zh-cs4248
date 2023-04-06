@@ -28,7 +28,7 @@ def run():
     test_dataloader = DataLoader(test_dataset, shuffle=False, batch_size=config.batch_size,
                                 collate_fn=test_dataset.collate_fn)
 
-    model = make_model(config.src_vocab_size, config.tgt_vocab_size, config.n_layers,
+    model = make_model(config.src_vocab_size, config.tgt_vocab_size,
                         config.d_model, config.d_hidden, config.dropout)
     criterion = torch.nn.CrossEntropyLoss(ignore_index = 0)
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr)

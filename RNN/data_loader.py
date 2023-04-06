@@ -11,20 +11,17 @@ DEVICE = config.device
 
 class Batch:
     """Object for holding a batch of data with mask during training."""
-    def __init__(self, src_text, trg_text, src, trg=None, pad=0):
+    def __init__(self, src_text, trg_text, src,src_len, trg=None, pad=0):
         self.src_text = src_text
         self.trg_text = trg_text
+        self.src_len = src_len
+
         src = src.to(DEVICE)
         self.src = src
-        # 对于当前输入的句子非空部分进行判断成bool序列
-        # 并在seq length前面增加一维，形成维度为 1×seq length 的矩阵
         self.src_mask = (src != pad).unsqueeze(-2)
-        # 如果输出目标不为空，则需要对decoder要使用到的target句子进行mask
         if trg is not None:
             trg = trg.to(DEVICE)
-            # decoder要用到的target输入部分
             self.trg = trg
-            # decoder训练时应预测输出的target结果
             self.trg_y = trg[1::]
             self.ntokens = (self.trg_y != pad).data.sum()
 
@@ -46,11 +43,9 @@ class MTDataset(Dataset):
 
     @staticmethod
     def len_argsort(seq):
-        """传入一系列句子数据(分好词的列表形式)，按照句子长度排序后，返回排序后原来各句子在数据中的索引下标"""
         return sorted(range(len(seq)), key=lambda x: len(seq[x]))
 
     def get_dataset(self, dataset, sort=False):
-        """把中文和英文按照同样的顺序排序, 以英文句子长度排序的(句子下标)顺序为基准"""
         out_en_sent = []
         out_cn_sent = []
         for idx, _ in enumerate(dataset):
@@ -76,7 +71,7 @@ class MTDataset(Dataset):
 
         src_tokens = [[self.BOS] + self.sp_eng.EncodeAsIds(sent) + [self.EOS] for sent in src_text]
         tgt_tokens = [[self.BOS] + self.sp_chn.EncodeAsIds(sent) + [self.EOS] for sent in tgt_text]
-
+        src_len = torch.ByteTensor([ len(l) for l in src_tokens])
         batch_input = pad_sequence([torch.LongTensor(np.array(l_)) for l_ in src_tokens],padding_value=self.PAD)
         batch_target = pad_sequence([torch.LongTensor(np.array(l_)) for l_ in tgt_tokens],padding_value=self.PAD)
-        return Batch(src_text, tgt_text, batch_input, batch_target, self.PAD)
+        return Batch(src_text, tgt_text, batch_input, src_len, batch_target, self.PAD)
