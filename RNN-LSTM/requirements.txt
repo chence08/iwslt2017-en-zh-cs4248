@@ -1,0 +1,7 @@
+numpy
+sacrebleu
+sentencepiece
+torch
+torchvision
+tqdm
+datasets
