@@ -2,6 +2,7 @@ from datasets.load import load_dataset
 import pandas as pd
 import logging
 from simpletransformers.t5 import T5Args, T5Model
+from transformers import MT5Config
 
 logging.basicConfig(level=logging.INFO)
 transformers_logger = logging.getLogger("transformers")
@@ -26,10 +27,9 @@ reverse_df['prefix'] = 'translate chinese to english'
 eval_df = pd.concat([eval_df, reverse_df])
 
 model_args = T5Args()
-model_args.max_seq_length = 96
-model_args.train_batch_size = 20
-model_args.eval_batch_size = 20
-model_args.num_train_epochs = 4
+model_args.train_batch_size = 12
+model_args.eval_batch_size = 12
+model_args.num_train_epochs = 2
 model_args.evaluate_during_training = True
 model_args.evaluate_during_training_steps = 5000
 model_args.use_multiprocessing = False
@@ -39,11 +39,14 @@ model_args.save_model_every_epoch = True
 model_args.save_eval_checkpoints = False
 model_args.no_cache = True
 model_args.reprocess_input_data = True
-model_args.overwrite_output_dir = False
+model_args.overwrite_output_dir = True
 model_args.preprocess_inputs = False
 model_args.num_return_sequences = 1
 model_args.wandb_project = "MT5 English-Chinese Translation"
+model_args.num_beams = 2
 
-model = T5Model("mt5", "outputs", args=model_args)
+config = MT5Config() # for random weights
+
+model = T5Model("mt5", "google/mt5-small", args=model_args, config=config)
 
 model.train_model(train_df, eval_data=eval_df, output_dir='mt5_more_epochs')
